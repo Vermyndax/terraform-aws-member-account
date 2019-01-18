@@ -16,6 +16,10 @@ variable "create_iam_roles" {
   description = "Boolean to define whether or not to create the IAM roles in this account."
 }
 
+variable "environment" {
+    descriptiion = "Environment that will be set for the account. (Ex: prod, dev, text, ops)"
+}
+
 ### Variables below are commented out until they are implemented in a future revision.
 #
 # # Change default value to true for production code.
