@@ -791,10 +791,10 @@ resource "aws_codecommit_trigger" "notify_sns_on_repo" {
 }
 
 # SNS topic if create_sns_topic = true
-resource "aws_sns_topic" "default_sns_topic" {
+resource "aws_sns_topic" "ops_sns_topic" {
   provider = "aws.ops"
   count = "${var.create_sns_topic == "true" ? 1 : 0}"
-  name = "${var.tag_application_id}-notifications"
+  name = "${var.tag_application_id}-ops-notifications"
 
   # tags = "${merge(
   #   local.required_tags,

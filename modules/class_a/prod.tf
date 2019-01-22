@@ -46,3 +46,16 @@ resource "aws_s3_bucket" "prod_terraform_state_bucket" {
     )
   )}"
 }
+
+resource "aws_sns_topic" "prod_sns_topic" {
+  provider = "aws.prod"
+  count = "${var.create_sns_topic == "true" ? 1 : 0}"
+  name = "${var.tag_application_id}-prod-notifications"
+
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "prod",
+  #   )
+  # )}"
+}

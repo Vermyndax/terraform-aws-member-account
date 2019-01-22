@@ -46,3 +46,16 @@ resource "aws_s3_bucket" "staging_terraform_state_bucket" {
     )
   )}"
 }
+
+resource "aws_sns_topic" "staging_sns_topic" {
+  provider = "aws.staging"
+  count = "${var.create_sns_topic == "true" ? 1 : 0}"
+  name = "${var.tag_application_id}-staging-notifications"
+
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "staging",
+  #   )
+  # )}"
+}
