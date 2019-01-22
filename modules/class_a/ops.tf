@@ -349,7 +349,7 @@ phases:
   post_build:
     commands:
       - git clone ${aws_codecommit_repository.default_codecommit_repo.clone_url_http}
-      - cd ${aws_codecommit_repository.default_codecommit_repo.name}
+      - cd ${aws_codecommit_repository.default_codecommit_repo.repository_name}
       - git checkout staging
       - git merge origin/dev
       - git push -u origin staging
@@ -441,7 +441,7 @@ phases:
   post_build:
     commands:
       - git clone ${aws_codecommit_repository.default_codecommit_repo.clone_url_http}
-      - cd ${aws_codecommit_repository.default_codecommit_repo.name}
+      - cd ${aws_codecommit_repository.default_codecommit_repo.repository_name}
       - git checkout master
       - git merge origin/staging
       - git push -u origin master
@@ -531,7 +531,7 @@ resource "aws_codepipeline" "dev_codepipeline" {
       output_artifacts = ["${var.tag_application_id}-dev-artifacts"]
 
       configuration {
-        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.name}"
+        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
         BranchName = "dev"
       }
     }
@@ -629,7 +629,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
       output_artifacts = ["${var.tag_application_id}-staging-artifacts"]
 
       configuration {
-        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.name}"
+        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
         BranchName = "staging"
       }
     }
@@ -727,7 +727,7 @@ resource "aws_codepipeline" "prod_codepipeline" {
       output_artifacts = ["${var.tag_application_id}-prod-artifacts"]
 
       configuration {
-        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.name}"
+        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
         BranchName = "master"
       }
     }
