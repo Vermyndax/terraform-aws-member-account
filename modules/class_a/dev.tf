@@ -46,3 +46,16 @@ resource "aws_s3_bucket" "dev_terraform_state_bucket" {
     )
   )}"
 }
+
+resource "aws_sns_topic" "dev_sns_topic" {
+  provider = "aws.dev"
+  count = "${var.create_sns_topic == "true" ? 1 : 0}"
+  name = "${var.tag_application_id}-dev-notifications"
+
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "dev",
+  #   )
+  # )}"
+}
