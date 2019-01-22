@@ -33,7 +33,7 @@ provider "aws" {
 
 resource "aws_organizations_account" "dev" {
   # provider = <master, inherited from top level>
-  depends_on = ["${aws_organizations_account.ops}"]
+  depends_on = ["aws_organizations_account.ops"]
 
   name  = "${var.account_name}-dev"
   email = "${var.dev_account_root_email}"
@@ -51,8 +51,8 @@ provider "aws" {
 
 resource "aws_organizations_account" "staging" {
   # provider = <master, inherited from top level>
-    depends_on = ["${aws_organizations_account.dev}"]
-
+  depends_on = ["aws_organizations_account.dev"]
+    
   name  = "${var.account_name}-staging"
   email = "${var.staging_account_root_email}"
 }
@@ -69,7 +69,7 @@ provider "aws" {
 
 resource "aws_organizations_account" "prod" {
   # provider = <master, inherited from top level>
-    depends_on = ["${aws_organizations_account.staging}"]
+    depends_on = ["aws_organizations_account.staging"]
 
   name  = "${var.account_name}-prod"
   email = "${var.prod_account_root_email}"
