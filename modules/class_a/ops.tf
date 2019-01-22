@@ -141,12 +141,12 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 }
 EOF
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
 
 }
 
@@ -261,12 +261,12 @@ policy = <<POLICY
 }
 POLICY
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
 
 }
 
@@ -590,12 +590,12 @@ resource "aws_codepipeline" "dev_codepipeline" {
     }
   }
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
 
 }
 
@@ -688,12 +688,12 @@ resource "aws_codepipeline" "staging_codepipeline" {
     }
   }
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
 
 }
 
@@ -750,12 +750,12 @@ resource "aws_codepipeline" "prod_codepipeline" {
     }
   }
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
 
 }
 
@@ -769,12 +769,12 @@ resource "aws_codecommit_repository" "default_codecommit_repo" {
   repository_name = "${var.tag_application_id}"
   default_branch = "master"
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
 }
 
 resource "aws_codecommit_trigger" "notify_sns_on_repo" {
@@ -796,12 +796,12 @@ resource "aws_sns_topic" "default_sns_topic" {
   count = "${var.create_sns_topic == "true" ? 1 : 0}"
   name = "${var.tag_application_id}-notifications"
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
 }
 
 # Default SNS subscriptions if create_default_sns_subscriptions = true
@@ -809,6 +809,6 @@ resource "aws_sns_topic_subscription" "sns-topic" {
   provider = "aws.ops"
   count = "${var.create_default_sns_subscriptions == "true" ? 1 : 0}"
   topic_arn = "${aws_sns_topic.default_sns_topic.arn}"
-  protocol  = "email"
-  endpoint  = "${var.default_sns_email}"
+  protocol  = "sms"
+  endpoint  = "${var.default_sns_sms}"
 }

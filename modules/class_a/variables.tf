@@ -66,9 +66,8 @@ variable "create_default_sns_subscriptions" {
   default = "true"
 }
 
-variable "default_sns_email" {
-  description = "Default SNS email address for default subscriptions."
-  default = "jasonmiller88@icloud.com"
+variable "default_sns_sms" {
+  description = "Default SMS number for default subscriptions."
 }
 
 variable "codebuild_timeout" {
