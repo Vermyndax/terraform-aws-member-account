@@ -71,8 +71,8 @@ variable "default_sns_sms" {
 }
 
 variable "codebuild_timeout" {
-  description = "Timeout setting for CodeBuild projects (in minutes). Default: 5"
-  default = "5"
+  description = "Timeout setting for CodeBuild projects (in minutes). Default: 60"
+  default = "60"
 }
 
 variable "build_compute_type" {
