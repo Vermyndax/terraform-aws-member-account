@@ -312,7 +312,8 @@ policy = <<POLICY
     },
     {
       "Action": [
-        "ec2:*"
+        "ec2:*",
+        "kms:CreateKey"
       ],
       "Resource": "*",
       "Effect": "Allow"
@@ -338,7 +339,7 @@ resource "aws_codebuild_project" "dev_provision" {
   name = "${var.tag_application_id}-dev-provision"
   build_timeout = "${var.codebuild_timeout}"
   # Should this role be a role in the child accounts like the CodeCommit access role in dev?
-  service_role = "${aws_iam_role.codebuild_role.arn}"
+  service_role = "${aws_iam_role.dev_codebuild_role.arn}"
   encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
 
   artifacts {
