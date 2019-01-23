@@ -97,7 +97,19 @@ resource "aws_s3_bucket" "ops_codepipeline_artifact_bucket" {
     }
   }
 
-policy = <<BUCKETPOLICY
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "ops",
+    )
+  )}"
+}
+
+resource "aws_s3_bucket_policy" "ops_codepipeline_artifact_bucket_policy" {
+  provider = "aws.ops"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  bucket = "${aws_s3_bucket.ops_codepipeline_artifact_bucket.id}"
+  policy = <<BUCKETPOLICY
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -115,13 +127,6 @@ policy = <<BUCKETPOLICY
     ]
 }
 BUCKETPOLICY
-
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
 }
 
 # resource "aws_iam_role" "codepipeline_role" {

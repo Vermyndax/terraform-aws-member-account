@@ -62,7 +62,19 @@ resource "aws_s3_bucket" "dev_codepipeline_artifact_bucket" {
     }
   }
 
-policy = <<BUCKETPOLICY
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "ops",
+    )
+  )}"
+}
+
+resource "aws_s3_bucket_policy" "dev_codepipeline_artifact_bucket_policy" {
+  provider = "aws.dev"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  bucket = "${aws_s3_bucket.dev_codepipeline_artifact_bucket.id}"
+  policy = <<BUCKETPOLICY
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -80,13 +92,6 @@ policy = <<BUCKETPOLICY
     ]
 }
 BUCKETPOLICY
-
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
 }
 
 # IAM role for ops CodePipeline role to assume for CodeCommit access
