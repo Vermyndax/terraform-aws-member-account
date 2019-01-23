@@ -81,8 +81,8 @@ variable "build_compute_type" {
 }
 
 variable "build_image" {
-    description = "Managed build image for CodeBuild. Default: aws/codebuild/ubuntu-base:14.04"
-    default = "aws/codebuild/ubuntu-base:14.04"
+    description = "Managed build image for CodeBuild. Default: aws/codebuild/eb-go-1.5-amazonlinux-64:2.1.3"
+    default = "aws/codebuild/eb-go-1.5-amazonlinux-64:2.1.3"
 }
 
 variable "build_privileged_override" {
