@@ -105,7 +105,8 @@ resource "aws_iam_role_policy" "dev_codecommit_access_role_policy" {
           "kms:*"
       ],
       "Resource": [
-        "${aws_kms_key.dev_s3_kms_key.arn}"
+        "${aws_kms_key.dev_s3_kms_key.arn}",
+        "${aws_kms_key.ops_s3_kms_key.arn}"
       ],
       "Effect": "Allow"
     }
