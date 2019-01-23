@@ -1,5 +1,5 @@
 resource "aws_kms_key" "dev_s3_kms_key" {
-  provider = "aws.ops"
+  provider = "aws.dev"
   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
   description = "This key is used to encrypt bucket objects"
   deletion_window_in_days = 30
@@ -15,14 +15,14 @@ resource "aws_kms_key" "dev_s3_kms_key" {
 }
 
 resource "aws_kms_alias" "dev_s3_kms_key_name" {
-  provider = "aws.ops"
+  provider = "aws.dev"
   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
   name = "alias/dev-s3-kms-key"
   target_key_id = "${aws_kms_key.dev_s3_kms_key.key_id}"
 }
 
 resource "aws_s3_bucket" "dev_terraform_state_bucket" {
-  provider = "aws.ops"
+  provider = "aws.dev"
   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
   bucket = "${local.application}-dev-terraform-state"
 
