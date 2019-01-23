@@ -12,6 +12,32 @@ resource "aws_kms_key" "ops_s3_kms_key" {
   deletion_window_in_days = 30
   enable_key_rotation = "true"
 
+  policy = <<KMSPOLICY
+{
+  "Version": "2012-10-17",
+  "Id": "key-default-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${aws_organizations_account.ops.id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+KMSPOLICY
+
   tags = "${merge(
     local.required_tags,
     map(
@@ -45,6 +71,25 @@ resource "aws_s3_bucket" "ops_terraform_state_bucket" {
       }
     }
   }
+
+policy = <<BUCKETPOLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
+            },
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::ra-test-codepipeline-artifacts",
+                "arn:aws:s3:::ra-test-codepipeline-artifacts/*"
+            ]
+        }
+    ]
+}
+BUCKETPOLICY
 
   tags = "${merge(
     local.required_tags,
@@ -120,9 +165,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
     {
       "Effect":"Allow",
       "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
+        "s3:*"
       ],
       "Resource": [
         "${aws_s3_bucket.codepipeline_artifact_bucket.arn}",
