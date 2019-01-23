@@ -376,6 +376,98 @@ POLICY
 
 }
 
+resource "aws_codebuild_project" "dev_provision" {
+  provider = "aws.dev"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name = "${var.tag_application_id}-dev-provision"
+  build_timeout = "${var.codebuild_timeout}"
+  service_role = "${aws_iam_role.dev_codebuild_role.arn}"
+  encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type = "${var.build_compute_type}"
+    image = "${var.build_image}"
+    type  = "LINUX_CONTAINER"
+    privileged_mode = "${var.build_privileged_override}"
+  }
+
+  source {
+    type = "CODEPIPELINE"
+    buildspec = <<BUILDSPEC
+version: 0.2
+phases:
+  install:
+    commands:
+      - yum -y install jq
+      - cd /tmp && curl -o terraform.zip https://releases.hashicorp.com/terraform/${var.terraform_version}/terraform_${var.terraform_version}_linux_amd64.zip && echo "${var.terraform_sha256} terraform.zip" | sha256sum -c --quiet && unzip terraform.zip && mv terraform /usr/bin
+  build:
+    commands:
+      - cd $CODEBUILD_SRC_DIR/terraform
+      - terraform init -backend=true -backend-config="bucket=${aws_s3_bucket.dev_terraform_state_bucket.id}" -backend-config="key=${var.terraform_state_file}" -backend-config="region=${var.region}" -no-color
+      - terraform plan -no-color
+      - terraform apply -auto-approve -no-color
+BUILDSPEC
+  }
+
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "dev",
+    )
+  )}"
+}
+
+resource "aws_codebuild_project" "git_merge_dev_to_staging" {
+  provider = "aws.dev"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name = "${var.tag_application_id}-git-merge-dev-to-staging"
+  build_timeout = "${var.codebuild_timeout}"
+  service_role = "${aws_iam_role.dev_codebuild_role.arn}"
+  encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type = "${var.build_compute_type}"
+    image = "${var.build_image}"
+    type  = "LINUX_CONTAINER"
+    privileged_mode = "${var.build_privileged_override}"
+  }
+
+  source {
+    type = "CODEPIPELINE"
+    # TODO: Need to detect whether or not they're using a CodeCommit repo, maybe it's something else!
+    buildspec = <<BUILDSPEC
+version: 0.2
+phases:
+  install:
+    commands:
+      - git config --global credential.helper '!aws codecommit credential-helper $@'
+      - git config --global credential.UseHttpPath true
+  post_build:
+    commands:
+      - git clone ${aws_codecommit_repository.default_codecommit_repo.clone_url_http}
+      - cd ${aws_codecommit_repository.default_codecommit_repo.repository_name}
+      - git checkout staging
+      - git merge origin/dev
+      - git push -u origin staging
+BUILDSPEC
+  }
+
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "dev",
+    )
+  )}"
+}
+
 resource "aws_codecommit_repository" "default_codecommit_repo" {
   provider = "aws.dev"
   count = "${var.create_codecommit_repo == "true" ? 1 : 0}"

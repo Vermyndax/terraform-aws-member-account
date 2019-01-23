@@ -289,6 +289,51 @@ POLICY
 
 }
 
+resource "aws_codebuild_project" "prod_provision" {
+  provider = "aws.prod"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name = "${var.tag_application_id}-prod-provision"
+  build_timeout = "${var.codebuild_timeout}"
+  service_role = "${aws_iam_role.prod_codebuild_role.arn}"
+  encryption_key = "${aws_kms_key.prod_s3_kms_key.arn}"
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type = "${var.build_compute_type}"
+    image = "${var.build_image}"
+    type  = "LINUX_CONTAINER"
+    privileged_mode = "${var.build_privileged_override}"
+  }
+
+  source {
+    type = "CODEPIPELINE"
+    buildspec = <<BUILDSPEC
+version: 0.2
+phases:
+  install:
+    commands:
+      - yum -y install jq
+      - cd /tmp && curl -o terraform.zip https://releases.hashicorp.com/terraform/${var.terraform_version}/terraform_${var.terraform_version}_linux_amd64.zip && echo "${var.terraform_sha256} terraform.zip" | sha256sum -c --quiet && unzip terraform.zip && mv terraform /usr/bin
+  build:
+    commands:
+      - cd $CODEBUILD_SRC_DIR/terraform
+      - terraform init -backend=true -backend-config="bucket=${aws_s3_bucket.prod_terraform_state_bucket.id}" -backend-config="key=${var.terraform_state_file}" -backend-config="region=${var.region}" -no-color
+      - terraform plan -no-color
+      - terraform apply -auto-approve -no-color
+BUILDSPEC
+  }
+
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "prod",
+    )
+  )}"
+}
+
 resource "aws_sns_topic" "prod_sns_topic" {
   provider = "aws.prod"
   count = "${var.create_sns_topic == "true" ? 1 : 0}"
