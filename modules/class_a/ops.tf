@@ -276,7 +276,7 @@ resource "aws_codebuild_project" "dev_provision" {
   build_timeout = "${var.codebuild_timeout}"
   # Should this role be a role in the child accounts like the CodeCommit access role in dev?
   service_role = "${aws_iam_role.codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
+  encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
@@ -321,7 +321,7 @@ resource "aws_codebuild_project" "git_merge_dev_to_staging" {
   name = "${var.tag_application_id}-git-merge-dev-to-staging"
   build_timeout = "${var.codebuild_timeout}"
   service_role = "${aws_iam_role.codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
+  encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
@@ -368,7 +368,7 @@ resource "aws_codebuild_project" "staging_provision" {
   name = "${var.tag_application_id}-staging-provision"
   build_timeout = "${var.codebuild_timeout}"
   service_role = "${aws_iam_role.codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.staging_s3_kms_key.arn}"
+  encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
@@ -413,7 +413,7 @@ resource "aws_codebuild_project" "git_merge_staging_to_master" {
   name = "${var.tag_application_id}-git-merge-staging-to-master"
   build_timeout = "${var.codebuild_timeout}"
   service_role = "${aws_iam_role.codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.staging_s3_kms_key.arn}"
+  encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
@@ -460,7 +460,7 @@ resource "aws_codebuild_project" "prod_provision" {
   name = "${var.tag_application_id}-prod-provision"
   build_timeout = "${var.codebuild_timeout}"
   service_role = "${aws_iam_role.codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.prod_s3_kms_key.arn}"
+  encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
