@@ -614,7 +614,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
     type = "S3"
 
     encryption_key {
-      id = "${aws_kms_alias.staging_s3_kms_key_name.arn}"
+      id = "${aws_kms_alias.ops_s3_kms_key_name.arn}"
       type = "KMS"
     }
   }
@@ -713,7 +713,7 @@ resource "aws_codepipeline" "prod_codepipeline" {
     type = "S3"
 
     encryption_key {
-      id = "${aws_kms_alias.prod_s3_kms_key_name.arn}"
+      id = "${aws_kms_alias.ops_s3_kms_key_name.arn}"
       type = "KMS"
     }
   }
