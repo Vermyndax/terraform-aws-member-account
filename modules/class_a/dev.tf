@@ -116,7 +116,7 @@ POLICY
 }
 
 resource "aws_iam_role" "dev_codebuild_role" {
-  provider = "aws.ops"
+  provider = "aws.dev"
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
   name = "${var.tag_application_id}-dev-codebuild-role"
 
@@ -144,7 +144,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dev_codebuild_policy" {
-  provider = "aws.ops"
+  provider = "aws.dev"
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
   name = "${var.tag_application_id}-dev-codebuild-policy"
   role = "${aws_iam_role.dev_codebuild_role.id}"
