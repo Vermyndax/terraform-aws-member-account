@@ -97,7 +97,7 @@ resource "aws_iam_role" "codepipeline_role" {
     },
     {
       "Effect": "Allow",
-      "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}"
+      "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}",
       "Action": "sts:AssumeRole"
     }
   ]
