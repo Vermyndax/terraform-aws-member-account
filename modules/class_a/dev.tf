@@ -48,10 +48,10 @@ resource "aws_s3_bucket" "dev_terraform_state_bucket" {
 }
 
 # IAM role for ops CodePipeline role to assume for CodeCommit access
-resource "aws_iam_role" "dev_codepipeline_access_role" {
+resource "aws_iam_role" "dev_codecommit_access_role" {
   provider = "aws.dev"
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
-  name = "${var.tag_application_id}-dev-codepipeline-access-role"
+  name = "${var.tag_application_id}-dev-codecommit-access-role"
 
   assume_role_policy = <<EOF
 {

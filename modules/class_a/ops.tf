@@ -94,6 +94,11 @@ resource "aws_iam_role" "codepipeline_role" {
         "Service": "codepipeline.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}"
+      "Action": "sts:AssumeRole"
     }
   ]
 }
@@ -527,7 +532,7 @@ resource "aws_codepipeline" "dev_codepipeline" {
       provider         = "CodeCommit"
       version          = "1"
       output_artifacts = ["${var.tag_application_id}-dev-artifacts"]
-      role_arn = "${aws_iam_role.dev_codepipeline_access_role.arn}"
+      role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
 
       configuration {
         RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
@@ -626,7 +631,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
       provider         = "CodeCommit"
       version          = "1"
       output_artifacts = ["${var.tag_application_id}-staging-artifacts"]
-      role_arn = "${aws_iam_role.dev_codepipeline_access_role.arn}"
+      role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
 
       configuration {
         RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
@@ -725,7 +730,7 @@ resource "aws_codepipeline" "prod_codepipeline" {
       provider         = "CodeCommit"
       version          = "1"
       output_artifacts = ["${var.tag_application_id}-prod-artifacts"]
-      role_arn = "${aws_iam_role.dev_codepipeline_access_role.arn}"
+      role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
 
       configuration {
         RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
