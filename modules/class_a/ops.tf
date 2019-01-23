@@ -277,6 +277,7 @@ resource "aws_codebuild_project" "dev_provision" {
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
   name = "${var.tag_application_id}-dev-provision"
   build_timeout = "${var.codebuild_timeout}"
+  # Should this role be a role in the child accounts like the CodeCommit access role in dev?
   service_role = "${aws_iam_role.codebuild_role.arn}"
   encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
 
@@ -529,6 +530,7 @@ resource "aws_codepipeline" "dev_codepipeline" {
       provider         = "CodeCommit"
       version          = "1"
       output_artifacts = ["${var.tag_application_id}-dev-artifacts"]
+      role_arn = "${aws_iam_role.dev_codepipeline_access_role.arn}"
 
       configuration {
         RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
@@ -627,6 +629,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
       provider         = "CodeCommit"
       version          = "1"
       output_artifacts = ["${var.tag_application_id}-staging-artifacts"]
+      role_arn = "${aws_iam_role.dev_codepipeline_access_role.arn}"
 
       configuration {
         RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
@@ -725,6 +728,7 @@ resource "aws_codepipeline" "prod_codepipeline" {
       provider         = "CodeCommit"
       version          = "1"
       output_artifacts = ["${var.tag_application_id}-prod-artifacts"]
+      role_arn = "${aws_iam_role.dev_codepipeline_access_role.arn}"
 
       configuration {
         RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
@@ -757,37 +761,6 @@ resource "aws_codepipeline" "prod_codepipeline" {
   #   )
   # )}"
 
-}
-
-# CodeCommit repo if create_codecommit_repo = true
-# TODO: Set up IAM policy for master branch protection
-# TODO: Find a way to create the 3 default branches - dev, staging, prod
-#
-resource "aws_codecommit_repository" "default_codecommit_repo" {
-  provider = "aws.ops"
-  count = "${var.create_codecommit_repo == "true" ? 1 : 0}"
-  repository_name = "${var.tag_application_id}"
-  default_branch = "master"
-
-  # tags = "${merge(
-  #   local.required_tags,
-  #   map(
-  #     "Environment", "ops",
-  #   )
-  # )}"
-}
-
-resource "aws_codecommit_trigger" "notify_sns_on_repo" {
-  provider = "aws.ops"
-  count = "${var.create_sns_topic == "true" ? 1 : 0}"
-  depends_on      = ["aws_codecommit_repository.default_codecommit_repo"]
-  repository_name = "${var.tag_application_id}"
-
-  trigger {
-    name            = "all-notifications"
-    events          = ["all"]
-    destination_arn = "${aws_sns_topic.default_sns_topic.arn}"
-  }
 }
 
 # SNS topic if create_sns_topic = true
