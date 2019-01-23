@@ -21,31 +21,31 @@ resource "aws_kms_alias" "prod_s3_kms_key_name" {
   target_key_id = "${aws_kms_key.prod_s3_kms_key.key_id}"
 }
 
-resource "aws_s3_bucket" "prod_terraform_state_bucket" {
-  provider = "aws.ops"
-  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  bucket = "${local.application}-prod-terraform-state"
+# resource "aws_s3_bucket" "prod_terraform_state_bucket" {
+#   provider = "aws.ops"
+#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+#   bucket = "${local.application}-prod-terraform-state"
 
-  versioning {
-    enabled = true
-  }
+#   versioning {
+#     enabled = true
+#   }
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
+#   server_side_encryption_configuration {
+#     rule {
+#       apply_server_side_encryption_by_default {
+#         kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
+#         sse_algorithm     = "aws:kms"
+#       }
+#     }
+#   }
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "prod",
-    )
-  )}"
-}
+#   tags = "${merge(
+#     local.required_tags,
+#     map(
+#       "Environment", "prod",
+#     )
+#   )}"
+# }
 
 resource "aws_sns_topic" "prod_sns_topic" {
   provider = "aws.prod"
