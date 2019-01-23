@@ -7,7 +7,7 @@
 # Locals
 
 locals {
-  application = "${var.tag_application_id}"
+  application = "${lower(var.tag_application_id)}"
   required_tags = {
     ApplicationID = "${var.tag_application_id}"
   }
