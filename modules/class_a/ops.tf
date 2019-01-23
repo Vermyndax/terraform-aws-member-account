@@ -54,75 +54,75 @@ resource "aws_kms_alias" "ops_s3_kms_key_name" {
   target_key_id = "${aws_kms_key.ops_s3_kms_key.key_id}"
 }
 
-# resource "aws_s3_bucket" "ops_terraform_state_bucket" {
-#   provider = "aws.ops"
-#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-#   bucket = "${local.application}-ops-terraform-state"
+resource "aws_s3_bucket" "ops_terraform_state_bucket" {
+  provider = "aws.ops"
+  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+  bucket = "${local.application}-ops-terraform-state"
 
-#   versioning {
-#     enabled = true
-#   }
+  versioning {
+    enabled = true
+  }
 
-#   server_side_encryption_configuration {
-#     rule {
-#       apply_server_side_encryption_by_default {
-#         kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
-#         sse_algorithm     = "aws:kms"
-#       }
-#     }
-#   }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
 
-#   tags = "${merge(
-#     local.required_tags,
-#     map(
-#       "Environment", "ops",
-#     )
-#   )}"
-# }
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "ops",
+    )
+  )}"
+}
 
 # CodePipelines (3 of them!) if create_pipelines = true
 
-# resource "aws_s3_bucket" "ops_codepipeline_artifact_bucket" {
-#   provider = "aws.ops"
-#   count = "${var.create_pipelines == "true" ? 1 : 0 }"
-#   bucket = "${local.application}-ops-codepipeline-artifacts"
-#   acl    = "private"
+resource "aws_s3_bucket" "ops_codepipeline_artifact_bucket" {
+  provider = "aws.ops"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  bucket = "${local.application}-ops-codepipeline-artifacts"
+  acl    = "private"
 
-#   server_side_encryption_configuration {
-#     rule {
-#       apply_server_side_encryption_by_default {
-#         kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
-#         sse_algorithm     = "aws:kms"
-#       }
-#     }
-#   }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
 
-# policy = <<BUCKETPOLICY
-# {
-#     "Version": "2012-10-17",
-#     "Statement": [
-#         {
-#             "Effect": "Allow",
-#             "Principal": {
-#                 "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
-#             },
-#             "Action": "s3:*",
-#             "Resource": [
-#                 "arn:aws:s3:::ra-test-codepipeline-artifacts",
-#                 "arn:aws:s3:::ra-test-codepipeline-artifacts/*"
-#             ]
-#         }
-#     ]
-# }
-# BUCKETPOLICY
+policy = <<BUCKETPOLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
+            },
+            "Action": "s3:*",
+            "Resource": [
+                "${aws_s3_bucket.ops_codepipeline_artifact_bucket.arn}",
+                "${aws_s3_bucket.ops_codepipeline_artifact_bucket.arn}/*"
+            ]
+        }
+    ]
+}
+BUCKETPOLICY
 
-#   tags = "${merge(
-#     local.required_tags,
-#     map(
-#       "Environment", "ops",
-#     )
-#   )}"
-# }
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "ops",
+    )
+  )}"
+}
 
 # resource "aws_iam_role" "codepipeline_role" {
 #   provider = "aws.ops"
