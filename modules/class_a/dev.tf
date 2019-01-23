@@ -77,11 +77,11 @@ EOF
 
 }
 
-resource "aws_iam_role_policy" "dev_codepipeline_access_role_policy" {
+resource "aws_iam_role_policy" "dev_codecommit_access_role_policy" {
   provider = "aws.dev"
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
-  name = "${var.tag_application_id}-dev-codepipeline-access-role-policy"
-  role = "${aws_iam_role.dev_codepipeline_access_role.id}"
+  name = "${var.tag_application_id}-dev-codecommit-access-role-policy"
+  role = "${aws_iam_role.dev_codecommit_access_role.id}"
 
   policy = <<POLICY
 {
