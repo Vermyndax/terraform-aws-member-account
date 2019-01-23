@@ -608,7 +608,7 @@ resource "aws_codepipeline" "dev_codepipeline" {
 resource "aws_codepipeline" "staging_codepipeline" {
   provider = "aws.ops"
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
-  name     = "${var.tag_application_id}-dev"
+  name     = "${var.tag_application_id}-staging"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
