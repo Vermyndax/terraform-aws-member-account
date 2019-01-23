@@ -65,7 +65,7 @@ resource "aws_s3_bucket" "dev_codepipeline_artifact_bucket" {
   tags = "${merge(
     local.required_tags,
     map(
-      "Environment", "ops",
+      "Environment", "dev",
     )
   )}"
 }
