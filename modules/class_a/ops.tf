@@ -262,7 +262,7 @@ policy = <<POLICY
         "${aws_s3_bucket.prod_terraform_state_bucket.arn}",
         "${aws_s3_bucket.prod_terraform_state_bucket.arn}/*",
         "${aws_s3_bucket.ops_terraform_state_bucket.arn}",
-        "${aws_s3_bucket.ops_terraform_state_bucket.arn}/*",
+        "${aws_s3_bucket.ops_terraform_state_bucket.arn}/*"
       ],
       "Effect": "Allow"
     },
