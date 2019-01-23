@@ -94,11 +94,6 @@ resource "aws_iam_role" "codepipeline_role" {
         "Service": "codepipeline.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
-    },
-    {
-      "Effect": "Allow",
-      "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}",
-      "Action": "sts:AssumeRole"
     }
   ]
 }
@@ -141,6 +136,11 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "codebuild:StartBuild"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}",
+      "Action": "sts:AssumeRole"
     }
   ]
 }
