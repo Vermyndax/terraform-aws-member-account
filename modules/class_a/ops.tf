@@ -531,7 +531,7 @@ resource "aws_codepipeline" "dev_codepipeline" {
       owner            = "AWS"
       provider         = "CodeCommit"
       version          = "1"
-      output_artifacts = ["${var.tag_application_id}-dev-artifacts"]
+      output_artifacts = ["${var.tag_application_id}-dev-artifacts-from-source"]
       role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
 
       configuration {
@@ -585,7 +585,7 @@ resource "aws_codepipeline" "dev_codepipeline" {
         category        = "Build"
         owner           = "AWS"
         provider        = "CodeBuild"
-        input_artifacts = ["${var.tag_application_id}-dev-artifacts"]
+        input_artifacts = ["${var.tag_application_id}-dev-artifacts-from-source"]
         version         = "1"
 
         configuration {
@@ -630,7 +630,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
       owner            = "AWS"
       provider         = "CodeCommit"
       version          = "1"
-      output_artifacts = ["${var.tag_application_id}-staging-artifacts"]
+      output_artifacts = ["${var.tag_application_id}-staging-artifacts-from-source"]
       role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
 
       configuration {
@@ -684,7 +684,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
         category        = "Build"
         owner           = "AWS"
         provider        = "CodeBuild"
-        input_artifacts = ["${var.tag_application_id}-staging-artifacts"]
+        input_artifacts = ["${var.tag_application_id}-staging-artifacts-from-source"]
         version         = "1"
 
         configuration {
@@ -729,7 +729,7 @@ resource "aws_codepipeline" "prod_codepipeline" {
       owner            = "AWS"
       provider         = "CodeCommit"
       version          = "1"
-      output_artifacts = ["${var.tag_application_id}-prod-artifacts"]
+      output_artifacts = ["${var.tag_application_id}-prod-artifacts-from-source"]
       role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
 
       configuration {
