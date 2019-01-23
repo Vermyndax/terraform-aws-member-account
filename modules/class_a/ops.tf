@@ -243,10 +243,7 @@ policy = <<POLICY
         "kms:Decrypt"
       ],
       "Resource": [
-        "${aws_kms_key.ops_s3_kms_key.arn}",
-        "${aws_kms_key.dev_s3_kms_key.arn}",
-        "${aws_kms_key.staging_s3_kms_key.arn}",
-        "${aws_kms_key.prod_s3_kms_key.arn}",
+        "${aws_kms_key.ops_s3_kms_key.arn}"
         ],
       "Effect": "Allow"
     },
