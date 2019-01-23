@@ -72,25 +72,6 @@ resource "aws_s3_bucket" "ops_terraform_state_bucket" {
     }
   }
 
-policy = <<BUCKETPOLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
-            },
-            "Action": "s3:*",
-            "Resource": [
-                "arn:aws:s3:::ra-test-codepipeline-artifacts",
-                "arn:aws:s3:::ra-test-codepipeline-artifacts/*"
-            ]
-        }
-    ]
-}
-BUCKETPOLICY
-
   tags = "${merge(
     local.required_tags,
     map(
@@ -115,6 +96,25 @@ resource "aws_s3_bucket" "codepipeline_artifact_bucket" {
       }
     }
   }
+
+policy = <<BUCKETPOLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
+            },
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::ra-test-codepipeline-artifacts",
+                "arn:aws:s3:::ra-test-codepipeline-artifacts/*"
+            ]
+        }
+    ]
+}
+BUCKETPOLICY
 
   tags = "${merge(
     local.required_tags,
