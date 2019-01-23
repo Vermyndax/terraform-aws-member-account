@@ -24,7 +24,7 @@ resource "aws_kms_alias" "staging_s3_kms_key_name" {
 resource "aws_s3_bucket" "staging_terraform_state_bucket" {
   provider = "aws.ops"
   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  bucket = "${var.tag_application_id}-staging-terraform-state"
+  bucket = "${local.application}-staging-terraform-state"
 
   versioning {
     enabled = true

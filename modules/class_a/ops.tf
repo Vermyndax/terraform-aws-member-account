@@ -31,7 +31,7 @@ resource "aws_kms_alias" "ops_s3_kms_key_name" {
 resource "aws_s3_bucket" "ops_terraform_state_bucket" {
   provider = "aws.ops"
   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  bucket = "${var.tag_application_id}-ops-terraform-state"
+  bucket = "${local.application}-ops-terraform-state"
 
   versioning {
     enabled = true
@@ -59,7 +59,7 @@ resource "aws_s3_bucket" "ops_terraform_state_bucket" {
 resource "aws_s3_bucket" "codepipeline_artifact_bucket" {
   provider = "aws.ops"
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
-  bucket = "${var.tag_application_id}-codepipeline-artifacts"
+  bucket = "${local.application}-codepipeline-artifacts"
   acl    = "private"
 
   server_side_encryption_configuration {

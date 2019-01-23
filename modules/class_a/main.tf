@@ -7,7 +7,7 @@
 # Locals
 
 locals {
-  application = "${var.tag_application_id}"
+  application = "${lower(var.tag_application_id)}"
   required_tags = {
     ApplicationID = "${var.tag_application_id}"
   }
@@ -19,6 +19,11 @@ resource "aws_organizations_account" "ops" {
 
   name  = "${var.account_name}-ops"
   email = "${var.ops_account_root_email}"
+
+  # Adding a sleep for 120 to prevent a known race condition.
+  provisioner "local-exec" {
+    command = "sleep 120"
+  }
 }
 
 provider "aws" {
@@ -37,6 +42,11 @@ resource "aws_organizations_account" "dev" {
 
   name  = "${var.account_name}-dev"
   email = "${var.dev_account_root_email}"
+
+  # Adding a sleep for 120 to prevent a known race condition.
+  provisioner "local-exec" {
+    command = "sleep 120"
+  }
 }
 
 provider "aws" {
@@ -55,6 +65,11 @@ resource "aws_organizations_account" "staging" {
     
   name  = "${var.account_name}-staging"
   email = "${var.staging_account_root_email}"
+
+  # Adding a sleep for 120 to prevent a known race condition.
+  provisioner "local-exec" {
+    command = "sleep 120"
+  }
 }
 
 provider "aws" {
@@ -73,6 +88,11 @@ resource "aws_organizations_account" "prod" {
 
   name  = "${var.account_name}-prod"
   email = "${var.prod_account_root_email}"
+
+  # Adding a sleep for 120 to prevent a known race condition.
+  provisioner "local-exec" {
+    command = "sleep 120"
+  }
 }
 
 provider "aws" {
