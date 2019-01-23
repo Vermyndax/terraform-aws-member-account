@@ -22,7 +22,7 @@ resource "aws_kms_alias" "prod_s3_kms_key_name" {
 }
 
 resource "aws_s3_bucket" "prod_terraform_state_bucket" {
-  provider = "aws.prod"
+  provider = "aws.ops"
   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
   bucket = "${local.application}-prod-terraform-state"
 
