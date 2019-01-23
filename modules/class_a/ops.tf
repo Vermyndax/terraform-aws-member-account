@@ -277,6 +277,7 @@ resource "aws_codebuild_project" "dev_provision" {
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
   name = "${var.tag_application_id}-dev-provision"
   build_timeout = "${var.codebuild_timeout}"
+  # Should this role be a role in the child accounts like the CodeCommit access role in dev?
   service_role = "${aws_iam_role.codebuild_role.arn}"
   encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
 
