@@ -21,31 +21,31 @@ resource "aws_kms_alias" "dev_s3_kms_key_name" {
   target_key_id = "${aws_kms_key.dev_s3_kms_key.key_id}"
 }
 
-resource "aws_s3_bucket" "dev_terraform_state_bucket" {
-  provider = "aws.ops"
-  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  bucket = "${local.application}-dev-terraform-state"
+# resource "aws_s3_bucket" "dev_terraform_state_bucket" {
+#   provider = "aws.ops"
+#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+#   bucket = "${local.application}-dev-terraform-state"
 
-  versioning {
-    enabled = true
-  }
+#   versioning {
+#     enabled = true
+#   }
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.dev_s3_kms_key.arn}"
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
+#   server_side_encryption_configuration {
+#     rule {
+#       apply_server_side_encryption_by_default {
+#         kms_master_key_id = "${aws_kms_key.dev_s3_kms_key.arn}"
+#         sse_algorithm     = "aws:kms"
+#       }
+#     }
+#   }
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "dev",
-    )
-  )}"
-}
+#   tags = "${merge(
+#     local.required_tags,
+#     map(
+#       "Environment", "dev",
+#     )
+#   )}"
+# }
 
 # IAM role for ops CodePipeline role to assume for CodeCommit access
 resource "aws_iam_role" "dev_codecommit_access_role" {
