@@ -254,7 +254,7 @@ policy = <<POLICY
       "Action": [
         "sns:Publish"
       ],
-      "Resource": "${aws_sns_topic.default_sns_topic.arn}",
+      "Resource": "${aws_sns_topic.ops_sns_topic.arn}",
       "Effect": "Allow"
     }
   ]
@@ -567,7 +567,7 @@ resource "aws_codepipeline" "dev_codepipeline" {
       version         = "1"
 
       configuration {
-        NotificationArn = "${aws_sns_topic.default_sns_topic.arn}"
+        NotificationArn = "${aws_sns_topic.ops_sns_topic.arn}"
         # CustomData = "${var.dev_approve_comment}"
         CustomData = "Please approve changes in the dev environment so it can be promoted to staging."
         # ExternalEntityLink = "${var.dev_application_external_url}"
@@ -666,7 +666,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
       version         = "1"
 
       configuration {
-        NotificationArn = "${aws_sns_topic.default_sns_topic.arn}"
+        NotificationArn = "${aws_sns_topic.ops_sns_topic.arn}"
         # CustomData = "${var.staging_approve_comment}"
         CustomData = "Please approve changes in the staging environment so it can be promoted to staging."
         # ExternalEntityLink = "${var.staging_application_external_url}"
@@ -781,7 +781,7 @@ resource "aws_sns_topic" "ops_sns_topic" {
 resource "aws_sns_topic_subscription" "sns-topic" {
   provider = "aws.ops"
   count = "${var.create_default_sns_subscriptions == "true" ? 1 : 0}"
-  topic_arn = "${aws_sns_topic.default_sns_topic.arn}"
+  topic_arn = "${aws_sns_topic.ops_sns_topic.arn}"
   protocol  = "sms"
   endpoint  = "${var.default_sns_sms}"
 }
