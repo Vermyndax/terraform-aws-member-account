@@ -21,32 +21,78 @@ resource "aws_kms_alias" "prod_s3_kms_key_name" {
   target_key_id = "${aws_kms_key.prod_s3_kms_key.key_id}"
 }
 
-# resource "aws_s3_bucket" "prod_terraform_state_bucket" {
-#   provider = "aws.ops"
-#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-#   bucket = "${local.application}-prod-terraform-state"
+resource "aws_s3_bucket" "prod_terraform_state_bucket" {
+  provider = "aws.ops"
+  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+  bucket = "${local.application}-prod-terraform-state"
 
-#   versioning {
-#     enabled = true
-#   }
+  versioning {
+    enabled = true
+  }
 
-#   server_side_encryption_configuration {
-#     rule {
-#       apply_server_side_encryption_by_default {
-#         kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
-#         sse_algorithm     = "aws:kms"
-#       }
-#     }
-#   }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
 
-#   tags = "${merge(
-#     local.required_tags,
-#     map(
-#       "Environment", "prod",
-#     )
-#   )}"
-# }
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "prod",
+    )
+  )}"
+}
 
+resource "aws_s3_bucket" "prod_codepipeline_artifact_bucket" {
+  provider = "aws.prod"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  bucket = "${local.application}-prod-codepipeline-artifacts"
+  acl    = "private"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "prod",
+    )
+  )}"
+}
+
+resource "aws_s3_bucket_policy" "prod_codepipeline_artifact_bucket_policy" {
+  provider = "aws.prod"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  bucket = "${aws_s3_bucket.prod_codepipeline_artifact_bucket.id}"
+  policy = <<BUCKETPOLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
+            },
+            "Action": "s3:*",
+            "Resource": [
+                "${aws_s3_bucket.prod_codepipeline_artifact_bucket.arn}",
+                "${aws_s3_bucket.prod_codepipeline_artifact_bucket.arn}/*"
+            ]
+        }
+    ]
+}
+BUCKETPOLICY
+}
 resource "aws_sns_topic" "prod_sns_topic" {
   provider = "aws.prod"
   count = "${var.create_sns_topic == "true" ? 1 : 0}"
