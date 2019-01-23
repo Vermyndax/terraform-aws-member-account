@@ -175,6 +175,80 @@ resource "aws_sns_topic" "dev_sns_topic" {
   # )}"
 }
 
+resource "aws_iam_role" "dev_codepipeline_role" {
+  provider = "aws.dev"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name = "${var.tag_application_id}-dev-codepipeline-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "dev",
+    )
+  )}"
+}
+
+resource "aws_iam_role_policy" "dev_codepipeline_policy" {
+  provider = "aws.dev"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name = "${var.tag_application_id}-dev-codepipeline-policy"
+  role = "${aws_iam_role.dev_codepipeline_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect":"Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.dev_codepipeline_artifact_bucket.arn}",
+        "${aws_s3_bucket.dev_codepipeline_artifact_bucket.arn}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}",
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "dev",
+  #   )
+  # )}"
+
+}
+
 # CodeCommit repo if create_codecommit_repo = true
 # TODO: Set up IAM policy for master branch protection
 # TODO: Find a way to create the 3 default branches - dev, staging, prod
