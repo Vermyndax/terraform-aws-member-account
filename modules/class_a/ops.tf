@@ -309,6 +309,13 @@ policy = <<POLICY
       ],
       "Resource": "${aws_sns_topic.ops_sns_topic.arn}",
       "Effect": "Allow"
+    },
+    {
+      "Action": [
+        "ec2:*"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
     }
   ]
 }
