@@ -233,7 +233,8 @@ policy = <<POLICY
         "codebuild:*"
       ],
       "Resource": [
-        "${aws_codebuild_project.staging_provision.id}"
+        "${aws_codebuild_project.staging_provision.id}",
+        "${aws_codebuild_project.git_merge_staging_to_master.id}"
       ],
       "Effect": "Allow"
     },
@@ -334,52 +335,151 @@ BUILDSPEC
   )}"
 }
 
-# resource "aws_codebuild_project" "git_merge_staging_to_master" {
-#   provider = "aws.staging"
-#   count = "${var.create_pipelines == "true" ? 1 : 0 }"
-#   name = "${var.tag_application_id}-git-merge-staging-to-master"
-#   build_timeout = "${var.codebuild_timeout}"
-#   service_role = "${aws_iam_role.staging_codebuild_role.arn}"
-#   encryption_key = "${aws_kms_key.staging_s3_kms_key.arn}"
+resource "aws_codebuild_project" "git_merge_staging_to_master" {
+  provider = "aws.staging"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name = "${var.tag_application_id}-git-merge-staging-to-master"
+  build_timeout = "${var.codebuild_timeout}"
+  service_role = "${aws_iam_role.staging_codebuild_role.arn}"
+  encryption_key = "${aws_kms_key.staging_s3_kms_key.arn}"
 
-#   artifacts {
-#     type = "CODEPIPELINE"
-#   }
+  artifacts {
+    type = "CODEPIPELINE"
+  }
 
-#   environment {
-#     compute_type = "${var.build_compute_type}"
-#     image = "${var.build_image}"
-#     type  = "LINUX_CONTAINER"
-#     privileged_mode = "${var.build_privileged_override}"
-#   }
+  environment {
+    compute_type = "${var.build_compute_type}"
+    image = "${var.build_image}"
+    type  = "LINUX_CONTAINER"
+    privileged_mode = "${var.build_privileged_override}"
+  }
 
-#   source {
-#     type = "CODEPIPELINE"
-#     # TODO: Need to detect whether or not they're using a CodeCommit repo, maybe it's something else!
-#     buildspec = <<BUILDSPEC
-# version: 0.2
-# phases:
-#   install:
-#     commands:
-#       - git config --global credential.helper '!aws codecommit credential-helper $@'
-#       - git config --global credential.UseHttpPath true
-#   post_build:
-#     commands:
-#       - git clone ${aws_codecommit_repository.default_codecommit_repo.clone_url_http}
-#       - cd ${aws_codecommit_repository.default_codecommit_repo.repository_name}
-#       - git checkout master
-#       - git merge origin/staging
-#       - git push -u origin master
-# BUILDSPEC
-#   }
+  source {
+    type = "CODEPIPELINE"
+    # TODO: Need to detect whether or not they're using a CodeCommit repo, maybe it's something else!
+    buildspec = <<BUILDSPEC
+version: 0.2
+phases:
+  install:
+    commands:
+      - git config --global credential.helper '!aws codecommit credential-helper $@'
+      - git config --global credential.UseHttpPath true
+  post_build:
+    commands:
+      - git clone ${aws_codecommit_repository.default_codecommit_repo.clone_url_http}
+      - cd ${aws_codecommit_repository.default_codecommit_repo.repository_name}
+      - git checkout master
+      - git merge origin/staging
+      - git push -u origin master
+BUILDSPEC
+  }
 
-#   tags = "${merge(
-#     local.required_tags,
-#     map(
-#       "Environment", "ops",
-#     )
-#   )}"
-# }
+  tags = "${merge(
+    local.required_tags,
+    map(
+      "Environment", "ops",
+    )
+  )}"
+}
+
+# TODO: Add parameters to the repo activity below to make it configurable with other git repos
+# TODO: Provide optional flag to tear down Dev Terraform with a boolean (terraform destroy stage)
+resource "aws_codepipeline" "staging_codepipeline" {
+  provider = "aws.staging"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name     = "${var.tag_application_id}-staging"
+  role_arn = "${aws_iam_role.staging_codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.staging_codepipeline_artifact_bucket.bucket}"
+    type = "S3"
+
+    encryption_key {
+      id = "${aws_kms_alias.staging_s3_kms_key_name.arn}"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeCommit"
+      version          = "1"
+      output_artifacts = ["${var.tag_application_id}-staging-artifacts-from-source"]
+      role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
+
+      configuration {
+        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
+        BranchName = "staging"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["${var.tag_application_id}-staging-artifacts-from-source"]
+      version         = "1"
+
+      configuration {
+        ProjectName = "${var.tag_application_id}-staging-provision"
+      }
+    }
+  }
+
+  # stage {
+  #   name = "Staging-Approval"
+
+  #   action {
+  #     name            = "Approval"
+  #     category        = "Approval"
+  #     owner           = "AWS"
+  #     provider        = "Manual"
+  #     version         = "1"
+
+  #     configuration {
+  #       NotificationArn = "${aws_sns_topic.ops_sns_topic.arn}"
+  #       # CustomData = "${var.staging_approve_comment}"
+  #       CustomData = "Please approve changes in the staging environment so it can be promoted to staging."
+  #       # ExternalEntityLink = "${var.staging_application_external_url}"
+  #     }
+  #   }
+  # }
+
+  #   stage {
+  #     name = "Git-Merge-Staging-To-Master"
+
+  #     action {
+  #       name            = "Git-Merge-Staging-To-Master"
+  #       category        = "Build"
+  #       owner           = "AWS"
+  #       provider        = "CodeBuild"
+  #       input_artifacts = ["${var.tag_application_id}-staging-artifacts-from-source"]
+  #       version         = "1"
+
+  #       configuration {
+  #         ProjectName = "${var.tag_application_id}-git-merge-staging-to-master"
+  #       }
+  #   }
+  # }
+
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
+
+}
 
 resource "aws_sns_topic" "staging_sns_topic" {
   provider = "aws.staging"

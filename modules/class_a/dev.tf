@@ -494,3 +494,102 @@ resource "aws_codecommit_trigger" "notify_sns_on_repo" {
     destination_arn = "${aws_sns_topic.dev_sns_topic.arn}"
   }
 }
+
+# TODO: Add parameters to the repo activity below to make it configurable with other git repos
+# TODO: Provide optional flag to tear down Dev Terraform with a boolean (terraform destroy stage)
+resource "aws_codepipeline" "dev_codepipeline" {
+  provider = "aws.dev"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name     = "${var.tag_application_id}-dev"
+  role_arn = "${aws_iam_role.dev_codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.dev_codepipeline_artifact_bucket.bucket}"
+    type = "S3"
+
+    encryption_key {
+      id = "${aws_kms_alias.dev_s3_kms_key_name.arn}"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeCommit"
+      version          = "1"
+      output_artifacts = ["${var.tag_application_id}-dev-artifacts-from-source"]
+      role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
+
+      configuration {
+        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
+        BranchName = "dev"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["${var.tag_application_id}-dev-artifacts-from-source"]
+      version         = "1"
+
+      configuration {
+        ProjectName = "${var.tag_application_id}-dev-provision"
+      }
+    }
+  }
+
+  stage {
+    name = "Dev-Approval"
+
+    action {
+      name            = "Approval"
+      category        = "Approval"
+      owner           = "AWS"
+      provider        = "Manual"
+      version         = "1"
+
+      configuration {
+        NotificationArn = "${aws_sns_topic.ops_sns_topic.arn}"
+        # CustomData = "${var.dev_approve_comment}"
+        CustomData = "Please approve changes in the dev environment so it can be promoted to staging."
+        # ExternalEntityLink = "${var.dev_application_external_url}"
+      }
+    }
+  }
+
+    stage {
+      name = "Git-Merge-Dev-To-Staging"
+
+      action {
+        name            = "Git-Merge-Dev-To-Staging"
+        category        = "Build"
+        owner           = "AWS"
+        provider        = "CodeBuild"
+        input_artifacts = ["${var.tag_application_id}-dev-artifacts-from-source"]
+        version         = "1"
+
+        configuration {
+          ProjectName = "${var.tag_application_id}-git-merge-dev-to-staging"
+        }
+    }
+  }
+
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "dev",
+  #   )
+  # )}"
+
+}
