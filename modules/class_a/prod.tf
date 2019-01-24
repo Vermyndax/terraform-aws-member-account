@@ -5,6 +5,29 @@ resource "aws_kms_key" "prod_s3_kms_key" {
   deletion_window_in_days = 30
   enable_key_rotation = "true"
 
+  policy =<<KMSPOLICY
+{
+  "Version": "2012-10-17",
+  "Id": "key-default-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::${aws_organizations_account.prod.id}:root",
+          "${aws_iam_role.prod_codebuild_role.arn}",
+          "${aws_iam_role.dev_codecommit_access_role}",
+          "${aws_iam_role.prod_codepipeline_role}"
+        ]
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+KMSPOLICY
+
   tags = "${merge(
     local.required_tags,
     map(
