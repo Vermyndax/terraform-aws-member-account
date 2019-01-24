@@ -174,6 +174,13 @@ resource "aws_iam_role_policy" "staging_codepipeline_policy" {
       "Resource": "*"
     },
     {
+      "Action": [
+        "sns:Publish"
+      ],
+      "Resource": "${aws_sns_topic.staging_sns_topic.arn}",
+      "Effect": "Allow"
+    },
+    {
       "Effect": "Allow",
       "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}",
       "Action": "sts:AssumeRole"
@@ -470,7 +477,7 @@ resource "aws_codepipeline" "staging_codepipeline" {
   #     version         = "1"
 
   #     configuration {
-  #       NotificationArn = "${aws_sns_topic.ops_sns_topic.arn}"
+  #       NotificationArn = "${aws_sns_topic.staging_sns_topic.arn}"
   #       # CustomData = "${var.staging_approve_comment}"
   #       CustomData = "Please approve changes in the staging environment so it can be promoted to staging."
   #       # ExternalEntityLink = "${var.staging_application_external_url}"

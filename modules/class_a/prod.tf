@@ -174,6 +174,13 @@ resource "aws_iam_role_policy" "prod_codepipeline_policy" {
       "Resource": "*"
     },
     {
+      "Action": [
+        "sns:Publish"
+      ],
+      "Resource": "${aws_sns_topic.prod_sns_topic.arn}",
+      "Effect": "Allow"
+    },
+    {
       "Effect": "Allow",
       "Resource": "arn:aws:iam::${aws_organizations_account.dev.id}:role/${aws_iam_role.dev_codecommit_access_role.name}",
       "Action": "sts:AssumeRole"
