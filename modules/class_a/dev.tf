@@ -17,8 +17,8 @@ resource "aws_kms_key" "dev_s3_kms_key" {
         "AWS": [
           "arn:aws:iam::${aws_organizations_account.dev.id}:root",
           "${aws_iam_role.dev_codebuild_role.arn}",
-          "${aws_iam_role.dev_codecommit_access_role}",
-          "${aws_iam_role.dev_codepipeline_role}"
+          "${aws_iam_role.dev_codecommit_access_role.arn}",
+          "${aws_iam_role.dev_codepipeline_role.arn}"
         ]
       },
       "Action": "kms:*",

@@ -17,8 +17,8 @@ resource "aws_kms_key" "staging_s3_kms_key" {
         "AWS": [
           "arn:aws:iam::${aws_organizations_account.staging.id}:root",
           "${aws_iam_role.staging_codebuild_role.arn}",
-          "${aws_iam_role.dev_codecommit_access_role}",
-          "${aws_iam_role.staging_codepipeline_role}"
+          "${aws_iam_role.dev_codecommit_access_role.arn}",
+          "${aws_iam_role.staging_codepipeline_role.arn}"
         ]
       },
       "Action": "kms:*",
