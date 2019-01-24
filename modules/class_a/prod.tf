@@ -334,6 +334,69 @@ BUILDSPEC
   )}"
 }
 
+# TODO: Add parameters to the repo activity below to make it configurable with other git repos
+# TODO: Provide optional flag to tear down Dev Terraform with a boolean (terraform destroy stage)
+resource "aws_codepipeline" "prod_codepipeline" {
+  provider = "aws.prod"
+  count = "${var.create_pipelines == "true" ? 1 : 0 }"
+  name     = "${var.tag_application_id}-prod"
+  role_arn = "${aws_iam_role.prod_codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.prod_codepipeline_artifact_bucket.bucket}"
+    type = "S3"
+
+    encryption_key {
+      id = "${aws_kms_alias.prod_s3_kms_key_name.arn}"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeCommit"
+      version          = "1"
+      output_artifacts = ["${var.tag_application_id}-prod-artifacts-from-source"]
+      role_arn = "${aws_iam_role.dev_codecommit_access_role.arn}"
+
+      configuration {
+        RepositoryName = "${aws_codecommit_repository.default_codecommit_repo.repository_name}"
+        BranchName = "master"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["${var.tag_application_id}-prod-artifacts-from-source"]
+      version         = "1"
+
+      configuration {
+        ProjectName = "${var.tag_application_id}-prod-provision"
+      }
+    }
+  }
+
+  # tags = "${merge(
+  #   local.required_tags,
+  #   map(
+  #     "Environment", "ops",
+  #   )
+  # )}"
+
+}
+
 resource "aws_sns_topic" "prod_sns_topic" {
   provider = "aws.prod"
   count = "${var.create_sns_topic == "true" ? 1 : 0}"
