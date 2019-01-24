@@ -5,6 +5,29 @@ resource "aws_kms_key" "dev_s3_kms_key" {
   deletion_window_in_days = 30
   enable_key_rotation = "true"
 
+  policy =<<KMSPOLICY
+{
+  "Version": "2012-10-17",
+  "Id": "key-default-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::${aws_organizations_account.dev.id}:root",
+          "${aws_iam_role.dev_codebuild_role.arn}",
+          "${aws_iam_role.dev_codecommit_access_role}",
+          "${aws_iam_role.dev_codepipeline_role}"
+        ]
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+KMSPOLICY
+
   tags = "${merge(
     local.required_tags,
     map(
@@ -158,7 +181,9 @@ resource "aws_iam_role_policy" "dev_codecommit_access_role_policy" {
       ],
       "Resource": [
         "${aws_kms_key.dev_s3_kms_key.arn}",
-        "${aws_kms_key.ops_s3_kms_key.arn}"
+        "${aws_kms_key.ops_s3_kms_key.arn}",
+        "${aws_kms_key.staging_s3_kms_key.arn}",
+        "${aws_kms_key.prod_s3_kms_key.arn}"
       ],
       "Effect": "Allow"
     }
@@ -363,7 +388,7 @@ policy = <<POLICY
     {
       "Action": [
         "ec2:*",
-        "kms:CreateKey"
+        "kms:*"
       ],
       "Resource": "*",
       "Effect": "Allow"

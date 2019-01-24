@@ -308,7 +308,7 @@ policy = <<POLICY
     {
       "Action": [
         "ec2:*",
-        "kms:CreateKey"
+        "kms:*"
       ],
       "Resource": "*",
       "Effect": "Allow"
