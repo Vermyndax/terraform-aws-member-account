@@ -107,7 +107,12 @@ resource "aws_iam_role" "dev_codecommit_access_role" {
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${aws_organizations_account.ops.id}"
+        "AWS": [
+          "${aws_organizations_account.ops.id}",
+          "${aws_organizations_account.dev.id}",
+          "${aws_organizations_account.staging.id}",
+          "${aws_organizations_account.prod.id}"
+        ]
       },
       "Action": "sts:AssumeRole"
     }
