@@ -341,6 +341,13 @@ policy = <<POLICY
     },
     {
       "Action": [
+        "codecommit:*"
+      ],
+      "Resource": "${aws_codecommit_repository.default_codecommit_repo.arn}",
+      "Effect": "Allow"
+    },
+    {
+      "Action": [
           "s3:*"
       ],
       "Resource": [
@@ -463,7 +470,7 @@ resource "aws_codebuild_project" "git_merge_dev_to_staging" {
   count = "${var.create_pipelines == "true" ? 1 : 0 }"
   name = "${var.tag_application_id}-git-merge-dev-to-staging"
   build_timeout = "${var.codebuild_timeout}"
-  service_role = "${aws_iam_role.dev_codebuild_role.arn}"
+  service_role = "${aws_iam_role.dev_codecommit_access_role.arn}"
   encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
 
   artifacts {
