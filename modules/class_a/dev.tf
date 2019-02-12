@@ -174,7 +174,7 @@ resource "aws_iam_role_policy" "dev_codecommit_access_role_policy" {
       ],
       "Resource": "*",
       "Effect": "Allow"
-    },
+    }
   ]
 }
 POLICY
