@@ -5,54 +5,54 @@
 # Additional IAM roles (future)
 #
 # S3 Terraform state bucket if create_terraform_state_buckets = true
-resource "aws_kms_key" "ops_s3_kms_key" {
-  provider = "aws.ops"
-  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  description = "This key is used to encrypt bucket objects"
-  deletion_window_in_days = 30
-  enable_key_rotation = "true"
+# resource "aws_kms_key" "ops_s3_kms_key" {
+#   provider = "aws.ops"
+#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+#   description = "This key is used to encrypt bucket objects"
+#   deletion_window_in_days = 30
+#   enable_key_rotation = "true"
 
-  policy = <<KMSPOLICY
-{
-  "Version": "2012-10-17",
-  "Id": "key-default-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${aws_organizations_account.ops.id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-KMSPOLICY
+#   policy = <<KMSPOLICY
+# {
+#   "Version": "2012-10-17",
+#   "Id": "key-default-1",
+#   "Statement": [
+#     {
+#       "Sid": "Enable IAM User Permissions",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "arn:aws:iam::${aws_organizations_account.ops.id}:root"
+#       },
+#       "Action": "kms:*",
+#       "Resource": "*"
+#     },
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "${aws_iam_role.dev_codecommit_access_role.arn}"
+#       },
+#       "Action": "kms:*",
+#       "Resource": "*"
+#     }
+#   ]
+# }
+# KMSPOLICY
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "ops",
-    )
-  )}"
+#   tags = "${merge(
+#     local.required_tags,
+#     map(
+#       "Environment", "ops",
+#     )
+#   )}"
 
-}
+# }
 
-resource "aws_kms_alias" "ops_s3_kms_key_name" {
-  provider = "aws.ops"
-  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  name = "alias/ops-s3-kms-key"
-  target_key_id = "${aws_kms_key.ops_s3_kms_key.key_id}"
-}
+# resource "aws_kms_alias" "ops_s3_kms_key_name" {
+#   provider = "aws.ops"
+#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+#   name = "alias/ops-s3-kms-key"
+#   target_key_id = "${aws_kms_key.ops_s3_kms_key.key_id}"
+# }
 
 resource "aws_s3_bucket" "ops_terraform_state_bucket" {
   provider = "aws.ops"
@@ -63,14 +63,16 @@ resource "aws_s3_bucket" "ops_terraform_state_bucket" {
     enabled = true
   }
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
+  server_side_encryption = "AES256"
+
+  # server_side_encryption_configuration {
+  #   rule {
+  #     apply_server_side_encryption_by_default {
+  #       kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
+  #       sse_algorithm     = "aws:kms"
+  #     }
+  #   }
+  # }
 
   tags = "${merge(
     local.required_tags,
@@ -88,14 +90,16 @@ resource "aws_s3_bucket" "ops_codepipeline_artifact_bucket" {
   bucket = "${local.application}-ops-codepipeline-artifacts"
   acl    = "private"
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
+  server_side_encryption = "AES256"
+
+  # server_side_encryption_configuration {
+  #   rule {
+  #     apply_server_side_encryption_by_default {
+  #       kms_master_key_id = "${aws_kms_key.ops_s3_kms_key.arn}"
+  #       sse_algorithm     = "aws:kms"
+  #     }
+  #   }
+  # }
 
   tags = "${merge(
     local.required_tags,
@@ -287,19 +291,6 @@ policy = <<POLICY
     },
     {
       "Action": [
-        "kms:DescribeKey",
-        "kms:GenerateDataKey*",
-        "kms:Encrypt",
-        "kms:ReEncrypt*",
-        "kms:Decrypt"
-      ],
-      "Resource": [
-        "${aws_kms_key.ops_s3_kms_key.arn}"
-        ],
-      "Effect": "Allow"
-    },
-    {
-      "Action": [
         "sns:Publish"
       ],
       "Resource": "${aws_sns_topic.ops_sns_topic.arn}",
@@ -334,7 +325,7 @@ resource "aws_codebuild_project" "ops_provision" {
   name = "${var.tag_application_id}-ops-provision"
   build_timeout = "${var.codebuild_timeout}"
   service_role = "${aws_iam_role.ops_codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
+  # encryption_key = "${aws_kms_key.ops_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
