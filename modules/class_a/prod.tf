@@ -53,16 +53,14 @@ resource "aws_s3_bucket" "prod_terraform_state_bucket" {
     enabled = true
   }
 
-  server_side_encryption = "AES256"
-
-  # server_side_encryption_configuration {
-  #   rule {
-  #     apply_server_side_encryption_by_default {
-  #       kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
-  #       sse_algorithm     = "aws:kms"
-  #     }
-  #   }
-  # }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        # kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
+        sse_algorithm     = "AES256"
+      }
+    }
+  }
 
   tags = "${merge(
     local.required_tags,
@@ -78,16 +76,14 @@ resource "aws_s3_bucket" "prod_codepipeline_artifact_bucket" {
   bucket = "${local.application}-prod-codepipeline-artifacts"
   acl    = "private"
 
-  server_side_encryption = "AES256"
-
-  # server_side_encryption_configuration {
-  #   rule {
-  #     apply_server_side_encryption_by_default {
-  #       kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
-  #       sse_algorithm     = "aws:kms"
-  #     }
-  #   }
-  # }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        # kms_master_key_id = "${aws_kms_key.prod_s3_kms_key.arn}"
+        sse_algorithm     = "AES256"
+      }
+    }
+  }
 
   tags = "${merge(
     local.required_tags,
