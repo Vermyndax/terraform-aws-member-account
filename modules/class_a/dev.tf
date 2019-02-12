@@ -1,48 +1,48 @@
-resource "aws_kms_key" "dev_s3_kms_key" {
-  provider = "aws.dev"
-  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  description = "This key is used to encrypt bucket objects"
-  deletion_window_in_days = 30
-  enable_key_rotation = "true"
+# resource "aws_kms_key" "dev_s3_kms_key" {
+#   provider = "aws.dev"
+#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+#   description = "This key is used to encrypt bucket objects"
+#   deletion_window_in_days = 30
+#   enable_key_rotation = "true"
 
-  policy =<<KMSPOLICY
-{
-  "Version": "2012-10-17",
-  "Id": "key-default-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "arn:aws:iam::${aws_organizations_account.dev.id}:root",
-          "${aws_iam_role.dev_codebuild_role.arn}",
-          "${aws_iam_role.dev_codecommit_access_role.arn}",
-          "${aws_iam_role.dev_codepipeline_role.arn}"
-        ]
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-KMSPOLICY
+#   policy =<<KMSPOLICY
+# {
+#   "Version": "2012-10-17",
+#   "Id": "key-default-1",
+#   "Statement": [
+#     {
+#       "Sid": "Enable IAM User Permissions",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": [
+#           "arn:aws:iam::${aws_organizations_account.dev.id}:root",
+#           "${aws_iam_role.dev_codebuild_role.arn}",
+#           "${aws_iam_role.dev_codecommit_access_role.arn}",
+#           "${aws_iam_role.dev_codepipeline_role.arn}"
+#         ]
+#       },
+#       "Action": "kms:*",
+#       "Resource": "*"
+#     }
+#   ]
+# }
+# KMSPOLICY
 
-  tags = "${merge(
-    local.required_tags,
-    map(
-      "Environment", "dev",
-    )
-  )}"
+#   tags = "${merge(
+#     local.required_tags,
+#     map(
+#       "Environment", "dev",
+#     )
+#   )}"
 
-}
+# }
 
-resource "aws_kms_alias" "dev_s3_kms_key_name" {
-  provider = "aws.dev"
-  count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
-  name = "alias/dev-s3-kms-key"
-  target_key_id = "${aws_kms_key.dev_s3_kms_key.key_id}"
-}
+# resource "aws_kms_alias" "dev_s3_kms_key_name" {
+#   provider = "aws.dev"
+#   count = "${var.create_terraform_state_buckets == "true" ? 1 : 0}"
+#   name = "alias/dev-s3-kms-key"
+#   target_key_id = "${aws_kms_key.dev_s3_kms_key.key_id}"
+# }
 
 resource "aws_s3_bucket" "dev_terraform_state_bucket" {
   provider = "aws.dev"
@@ -53,14 +53,16 @@ resource "aws_s3_bucket" "dev_terraform_state_bucket" {
     enabled = true
   }
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.dev_s3_kms_key.arn}"
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
+  server_side_encryption = "AES256"
+
+  # server_side_encryption_configuration {
+  #   rule {
+  #     apply_server_side_encryption_by_default {
+  #       kms_master_key_id = "${aws_kms_key.dev_s3_kms_key.arn}"
+  #       sse_algorithm     = "aws:kms"
+  #     }
+  #   }
+  # }
 
   tags = "${merge(
     local.required_tags,
@@ -76,14 +78,16 @@ resource "aws_s3_bucket" "dev_codepipeline_artifact_bucket" {
   bucket = "${local.application}-dev-codepipeline-artifacts"
   acl    = "private"
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.dev_s3_kms_key.arn}"
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
+  server_side_encryption = "AES256"
+
+  # server_side_encryption_configuration {
+  #   rule {
+  #     apply_server_side_encryption_by_default {
+  #       kms_master_key_id = "${aws_kms_key.dev_s3_kms_key.arn}"
+  #       sse_algorithm     = "aws:kms"
+  #     }
+  #   }
+  # }
 
   tags = "${merge(
     local.required_tags,
@@ -175,18 +179,6 @@ resource "aws_iam_role_policy" "dev_codecommit_access_role_policy" {
       "Resource": "*",
       "Effect": "Allow"
     },
-    {
-      "Action": [
-          "kms:*"
-      ],
-      "Resource": [
-        "${aws_kms_key.dev_s3_kms_key.arn}",
-        "${aws_kms_key.ops_s3_kms_key.arn}",
-        "${aws_kms_key.staging_s3_kms_key.arn}",
-        "${aws_kms_key.prod_s3_kms_key.arn}"
-      ],
-      "Effect": "Allow"
-    }
   ]
 }
 POLICY
@@ -381,19 +373,6 @@ policy = <<POLICY
     },
     {
       "Action": [
-        "kms:DescribeKey",
-        "kms:GenerateDataKey*",
-        "kms:Encrypt",
-        "kms:ReEncrypt*",
-        "kms:Decrypt"
-      ],
-      "Resource": [
-        "${aws_kms_key.dev_s3_kms_key.arn}"
-        ],
-      "Effect": "Allow"
-    },
-    {
-      "Action": [
         "sns:Publish"
       ],
       "Resource": "${aws_sns_topic.dev_sns_topic.arn}",
@@ -426,7 +405,7 @@ resource "aws_codebuild_project" "dev_provision" {
   name = "${var.tag_application_id}-dev-provision"
   build_timeout = "${var.codebuild_timeout}"
   service_role = "${aws_iam_role.dev_codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
+  # encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
@@ -471,7 +450,7 @@ resource "aws_codebuild_project" "git_merge_dev_to_staging" {
   name = "${var.tag_application_id}-git-merge-dev-to-staging"
   build_timeout = "${var.codebuild_timeout}"
   service_role = "${aws_iam_role.dev_codebuild_role.arn}"
-  encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
+  # encryption_key = "${aws_kms_key.dev_s3_kms_key.arn}"
 
   artifacts {
     type = "CODEPIPELINE"
@@ -551,10 +530,10 @@ resource "aws_codepipeline" "dev_codepipeline" {
     location = "${aws_s3_bucket.dev_codepipeline_artifact_bucket.bucket}"
     type = "S3"
 
-    encryption_key {
-      id = "${aws_kms_alias.dev_s3_kms_key_name.arn}"
-      type = "KMS"
-    }
+    # encryption_key {
+    #   id = "${aws_kms_alias.dev_s3_kms_key_name.arn}"
+    #   type = "KMS"
+    # }
   }
 
   stage {
